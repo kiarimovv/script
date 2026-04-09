@@ -215,17 +215,21 @@ async function runUpstreamScript(ctx) {
 
 export default async function (ctx) {
     sanitizeStoredAccounts(ctx);
+    const logger = createLoggerBridge(SCRIPT_NAME);
 
     if (ctx.env?.[ENV_VAR_NAME]) {
         ctx.storage.set(ENV_VAR_NAME, ctx.env[ENV_VAR_NAME]);
     }
 
     if (ctx.request && !ctx.response) {
+        logger.log('初始化触发，开始从请求头提取账号凭证');
         const account = extractAccountFromHeaders(hdrsToObj(ctx.request.headers));
         if (account) {
             upsertAccount(ctx, account);
+            logger.log(`账号更新成功 userId=${account.userId} userName=${account.userName}`);
             ctx.notify({ title: SCRIPT_NAME, body: `已更新账号：${account.userName || account.userId}` });
         } else {
+            logger.log('未提取到完整凭证，请检查请求头是否包含 x-vayne/x-teemo/x-sivir');
             ctx.notify({ title: SCRIPT_NAME, body: '未能从请求头提取账号凭证，请反馈抓包日志。' });
         }
         return;
