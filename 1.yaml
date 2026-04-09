@@ -272,40 +272,40 @@ scriptings:
     match: ^https://xxyx-client-api\.xiaoxiaoyouxuan\.com/my
     script_url: https://raw.githubusercontent.com/kiarimovv/script/ai/egern-script-migration/xxyx.js
     update_interval: 86400
-    timeout: 60
+    timeout: 180
     body_required: false
 - schedule:
     name: 晓晓优选-定时签到
     cron: 0 8 * * *
     script_url: https://raw.githubusercontent.com/kiarimovv/script/ai/egern-script-migration/xxyx.js
     update_interval: 86400
-    timeout: 60
+    timeout: 180
 - http_request:
     name: 歪麦霸王餐-初始化
     match: ^https://wmapp-api\.waimaimingtang\.com/api/api/v2/user/api_user_info_one
     script_url: https://raw.githubusercontent.com/kiarimovv/script/ai/egern-script-migration/wmbwc.js
     update_interval: 86400
-    timeout: 60
+    timeout: 180
     body_required: true
 - schedule:
     name: 歪麦霸王餐-定时签到
     cron: 30 8 * * *
     script_url: https://raw.githubusercontent.com/kiarimovv/script/ai/egern-script-migration/wmbwc.js
     update_interval: 86400
-    timeout: 60
+    timeout: 180
 - http_response:
     name: 小蚕霸王餐-初始化
     match: ^https://gw\.xiaocantech\.com/rpc
     script_url: https://raw.githubusercontent.com/kiarimovv/script/ai/egern-script-migration/xcbwc.js
     update_interval: 86400
-    timeout: 60
+    timeout: 180
     body_required: true
 - schedule:
     name: 小蚕霸王餐-定时签到
     cron: 0 9 * * *
     script_url: https://raw.githubusercontent.com/kiarimovv/script/ai/egern-script-migration/xcbwc.js
     update_interval: 86400
-    timeout: 60
+    timeout: 180
 - generic:
     name: 机场订阅小组件
     script_url: https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/Sub_Widget.JS

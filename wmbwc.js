@@ -22,6 +22,7 @@
 const SCRIPT_NAME       = '歪麦霸王餐';
 const ENV_VAR_NAME      = 'wmbwc_data';
 const ORIGINAL_SCRIPT   = 'https://gist.githubusercontent.com/Sliverkiss/49a9ffb2169a2becc33bf4fdbf6eb99a/raw/wmbwc.js';
+const UPSTREAM_TIMEOUT_MS = 175000;
 
 function normalizeHeaders(headers) {
     return Object.fromEntries(Object.entries(headers || {}).map(([key, value]) => [String(key).toLowerCase(), value]));
@@ -286,7 +287,7 @@ export default async function (ctx) {
         // $done() 拦截：脚本完成时放行
         globalThis.$done = () => finish();
         // 安全超时（55 秒），防止脚本卡住
-        const timer = setTimeout(() => finish(), 55000);
+        const timer = setTimeout(() => finish(), UPSTREAM_TIMEOUT_MS);
 
         ctx.http.get(ORIGINAL_SCRIPT)
             .then(r => r.text())
