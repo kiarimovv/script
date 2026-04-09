@@ -6,6 +6,14 @@ const moduleUrl = `data:text/javascript;base64,${Buffer.from(source).toString('b
 const module = await import(moduleUrl);
 
 assert.equal(typeof module.__test__?.extractAccountFromRequest, 'function', '缺少 extractAccountFromRequest 测试导出');
+assert.equal(typeof module.__test__?.createLoggerBridge, 'function', '缺少 createLoggerBridge 测试导出');
+
+const logMessages = [];
+const logger = module.__test__.createLoggerBridge('歪麦霸王餐', (...args) => {
+    logMessages.push(args.join(' '));
+});
+logger.log('hello');
+assert.equal(logMessages[0], '[歪麦霸王餐] hello');
 
 const account = module.__test__.extractAccountFromRequest({
     headers: {

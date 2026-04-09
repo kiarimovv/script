@@ -70,14 +70,14 @@ scriptings:
   # ------------------------------------------------------------
   # 小蚕霸王餐（Surge 兼容层包装，动态加载原始脚本）
   # ------------------------------------------------------------
-  # 步骤一：打开 App → 自动触发，获取 Token 后及时关闭 App
-  - http_response:
+  # 步骤一：打开 App → 自动触发，从请求头获取凭证
+  - http_request:
       name: 小蚕霸王餐-拦截
       match: "^https://gw\\.xiaocantech\\.com/rpc"
       script_url: "https://raw.githubusercontent.com/kiarimovv/script/main/xcbwc.js"
       update_interval: 86400
       timeout: 180
-      body_required: true
+      body_required: false
 
   # 步骤二：每天 09:00 定时执行（抓包成功后自动生效）
   - schedule:

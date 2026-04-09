@@ -24,6 +24,16 @@ const ENV_VAR_NAME      = 'wmbwc_data';
 const ORIGINAL_SCRIPT   = 'https://gist.githubusercontent.com/Sliverkiss/49a9ffb2169a2becc33bf4fdbf6eb99a/raw/wmbwc.js';
 const UPSTREAM_TIMEOUT_MS = 175000;
 
+function createLoggerBridge(name, sink = console.log) {
+    const write = (...args) => {
+        sink(`[${name}]`, ...args.map((item) => String(item)));
+    };
+    return {
+        log: (...args) => write(...args),
+        error: (...args) => write(...args),
+    };
+}
+
 function normalizeHeaders(headers) {
     return Object.fromEntries(Object.entries(headers || {}).map(([key, value]) => [String(key).toLowerCase(), value]));
 }
@@ -226,6 +236,14 @@ export default async function (ctx) {
             body:     String(body     ?? ''),
         }),
     };
+    const logger = createLoggerBridge(SCRIPT_NAME);
+    globalThis.console = {
+        ...console,
+        log: (...args) => logger.log(...args),
+        error: (...args) => logger.error(...args),
+        warn: (...args) => logger.log(...args),
+        info: (...args) => logger.log(...args),
+    };
 
     // HTTP 客户端（$httpClient）— callback 风格，内部用 ctx.http Promise 适配
     const makeMethod = (method) => (opts, callback) => {
@@ -312,4 +330,5 @@ export default async function (ctx) {
 
 export const __test__ = {
     extractAccountFromRequest,
+    createLoggerBridge,
 };
