@@ -2,32 +2,38 @@
  * 晓晓优选 - Egern 适配版
  * 原作者：Sliverkiss | Egern 适配改写
  *
- * [egern - http_response]
- *   match: ^https://xxyx-client-api\.xiaoxiaoyouxuan\.com/my
- *   body_required: true
- *   触发：打开 App → 进入「我的」页面，自动抓取并保存 Token
+ * ── 使用说明 ──────────────────────────────────────────────
  *
- * [egern - schedule]
+ * [步骤一] http_request 触发（捕获 Token）
+ *   类型：http_request
+ *   匹配：^https://xxyx-client-api\.xiaoxiaoyouxuan\.com/my
+ *   触发：打开 App → 进入「我的」页面
+ *   效果：从请求头中读取 xx-token，暂存到本地存储
+ *
+ * [步骤二] schedule 触发（补全账号信息 + 执行签到）
  *   cron: "0 8 * * *"
- *   env:
- *     xxyx_data: '[{"userId":"xxx","token":"xxx","userName":"手机号"}]'
- *   触发：定时执行签到和任务
+ *   效果：读取暂存 token，调 /my 接口补全手机号，然后执行签到和任务
+ *
+ * 也可手动指定账号跳过 http_request 步骤（env 变量）：
+ *   xxyx_data: '[{"userId":"xxx","token":"xxx","userName":"手机号"}]'
  *
  * [MITM]
  *   hostname: xxyx-client-api.xiaoxiaoyouxuan.com
+ *
+ * 注意：Egern 的 http_response 脚本 ctx.request.headers 不含 App 自定义头，
+ *       因此改用 http_request 类型捕获 xx-token。
  */
 
-const SCRIPT_NAME = '晓晓优选';
-const STORAGE_KEY  = 'xxyx_data';
-const BASE_URL     = 'https://xxyx-client-api.xiaoxiaoyouxuan.com';
+const SCRIPT_NAME    = '晓晓优选';
+const STORAGE_KEY    = 'xxyx_data';
+const TEMP_TOKEN_KEY = 'xxyx_temp_token';
+const BASE_URL       = 'https://xxyx-client-api.xiaoxiaoyouxuan.com';
 
 export default async function (ctx) {
-    // ── 工具 ──────────────────────────────────────────────
     const log    = (...a) => console.log(`[${SCRIPT_NAME}]`, ...a);
     const notify = (body, title = SCRIPT_NAME) =>
         ctx.notify({ title, body: String(body) });
 
-    /** 读账号列表：优先 env var（schedule 模式），其次 storage（http 模式存入） */
     const loadAccounts = () => {
         const raw = ctx.env?.[STORAGE_KEY] || ctx.storage.get(STORAGE_KEY);
         if (!raw) return [];
@@ -38,7 +44,6 @@ export default async function (ctx) {
     const saveAccounts = (list) =>
         ctx.storage.set(STORAGE_KEY, JSON.stringify(list));
 
-    /** 统一 HTTP 请求（自动拼接 BaseURL、携带鉴权 Header） */
     const api = async (token, path, method = 'GET', body = null) => {
         const url  = path.startsWith('http') ? path : `${BASE_URL}${path}`;
         const opts = {
@@ -58,43 +63,61 @@ export default async function (ctx) {
         return resp.json();
     };
 
-    // ── 模式一：http_response 触发（抓取 Token 并保存）──────
-    if (ctx.request && ctx.response) {
+    // ── 模式一：http_request 触发（从请求头捕获 Token）────────
+    // Egern 的 http_request 脚本 ctx.request.headers 包含完整请求头
+    // http_response 不含 App 自定义头，所以必须用 http_request
+    if (ctx.request && !ctx.response) {
         try {
-            // Egern Headers 对象使用 get() 而非 forEach
             const token = ctx.request.headers.get('xx-token');
-
-            const data = await ctx.response.json().catch(() => null);
-            const info = data?.data;
-
-            if (!token || !info?.mobile) {
-                log('Token 抓取失败：参数缺失，请进入「我的」页面重试');
-                return;
+            if (!token) {
+                log('请求头中无 xx-token，跳过');
+                return; // 放行请求
             }
 
-            const account = {
-                userId:   info.identityId,
-                token,
-                userName: info.mobile,
-            };
-
-            const list = loadAccounts();
-            const idx  = list.findIndex(a => a.userId === account.userId);
-            idx >= 0 ? (list[idx] = account) : list.push(account);
-            saveAccounts(list);
-
-            notify(`🎉 [${account.userName}] Token 更新成功！`);
-            log('Token 更新成功：', account.userName);
+            // 暂存 token（下次 cron 补全账号信息）
+            ctx.storage.set(TEMP_TOKEN_KEY, token);
+            log('Token 暂存成功，等待 schedule 任务补全账号信息');
+            notify('🔑 Token 已捕获，将在下次定时任务时自动补全账号信息并执行签到');
         } catch (e) {
-            log('抓取异常：', e.message);
+            log('捕获异常：', e.message);
         }
-        return;
+        return; // 放行请求，不修改
     }
 
-    // ── 模式二：schedule 触发（签到 + 完成任务）────────────
+    // ── 模式二：schedule 触发（签到 + 完成任务）────────────────
+
+    // 2a. 如果有待处理的临时 token，先补全为完整账号
+    const tempToken = ctx.storage.get(TEMP_TOKEN_KEY);
+    if (tempToken) {
+        ctx.storage.set(TEMP_TOKEN_KEY, ''); // 清除临时 token
+        try {
+            const res  = await api(tempToken, '/my?platform=ios');
+            const info = res?.data;
+            if (info?.mobile) {
+                const account = {
+                    userId:   info.identityId || info.mobile,
+                    token:    tempToken,
+                    userName: info.mobile,
+                };
+                const list = loadAccounts();
+                const idx  = list.findIndex(a => a.userId === account.userId);
+                idx >= 0 ? (list[idx] = account) : list.push(account);
+                saveAccounts(list);
+                notify(`🎉 [${account.userName}] 账号已添加，开始签到`);
+                log('账号补全成功：', account.userName);
+            } else {
+                log('Token 无效或已过期，请重新打开 App 进入「我的」页面');
+                notify('⚠️ Token 无效或已过期，请重新打开 App 进入「我的」页面');
+            }
+        } catch (e) {
+            log('账号补全失败：', e.message);
+        }
+    }
+
+    // 2b. 执行所有账号的签到任务
     const accounts = loadAccounts();
     if (!accounts.length) {
-        notify('⚠️ 无可用账号\n请先打开 App 进入「我的」页面获取 Token，或在 Egern 环境变量中设置 xxyx_data');
+        notify('⚠️ 无可用账号\n请打开 App 进入「我的」页面捕获 Token，或在 Egern 环境变量中设置 xxyx_data');
         return;
     }
 
@@ -105,21 +128,17 @@ export default async function (ctx) {
     for (const { token, userName } of accounts) {
         log(`──── 开始处理：${userName} ────`);
         try {
-            // 验证登录态
             await api(token, '/client/user/bind/leader', 'POST',
                 { signalId: 202, uid: 'XQIGUQVUAwxZClwM' });
 
-            // 签到前能量
-            const beforeRes  = await api(token, '/client/energy/mall/getUserEnergy?platform=ios');
-            const ptBefore   = beforeRes?.data?.energy ?? 0;
+            const beforeRes = await api(token, '/client/energy/mall/getUserEnergy?platform=ios');
+            const ptBefore  = beforeRes?.data?.energy ?? 0;
 
-            // 签到
-            const signRes    = await api(token, '/client/energy/mall/signIn', 'POST', { platform: 'ios' });
+            const signRes   = await api(token, '/client/energy/mall/signIn', 'POST', { platform: 'ios' });
             log(`签到结果：${signRes?.msg || '完成'}`);
 
-            // 获取任务列表（过滤未完成）
-            const taskRes    = await api(token, '/client/energy/mall/getTaskList');
-            const pending    = (taskRes?.data || []).filter(t => t.isCompleted === 0);
+            const taskRes   = await api(token, '/client/energy/mall/getTaskList');
+            const pending   = (taskRes?.data || []).filter(t => t.isCompleted === 0);
 
             for (const task of pending) {
                 for (let i = 0; i < (task.dailyCount || 1); i++) {
@@ -129,13 +148,11 @@ export default async function (ctx) {
                 }
             }
 
-            // 签到后能量
-            const afterRes   = await api(token, '/client/energy/mall/getUserEnergy?platform=ios');
-            const ptAfter    = afterRes?.data?.energy ?? 0;
+            const afterRes  = await api(token, '/client/energy/mall/getUserEnergy?platform=ios');
+            const ptAfter   = afterRes?.data?.energy ?? 0;
 
-            // 用户昵称
-            const userRes    = await api(token, '/my?platform=ios');
-            const nick       = userRes?.data?.nick || userName;
+            const userRes   = await api(token, '/my?platform=ios');
+            const nick      = userRes?.data?.nick || userName;
 
             msgs.push(`✅ [${nick}] 能量：${ptAfter}（+${ptAfter - ptBefore}）`);
             succCount++;
