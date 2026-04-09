@@ -1,0 +1,450 @@
+ipv6: true
+vif_only: true
+hijack_dns:
+- '*:53'
+geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
+proxy_latency_test_url: http://1.1.1.1/generate_204
+direct_latency_test_url: http://connectivitycheck.platform.hicloud.com/generate_204
+compat_route: false
+dns:
+  bootstrap:
+  - system
+  upstreams:
+    Domestic-DNS:
+    - 223.5.5.5
+    - 119.29.29.29
+  forward:
+  - domain_wildcard:
+      match: '*'
+      value: Domestic-DNS
+  hosts:
+    iosapps.itunes.apple.com:
+    - iosapps.itunes.apple.com.download.ks-cdn.com
+policy_groups:
+- external:
+    name: 手动选择
+    type: select
+    urls:
+    - https://zhs.futbol/link/O5N5rSbEr3d86s42?mu=2&tj=1
+    - https://api-qw.02000.xin/7e1c2a94fbd30658c4a8d1ef92b7ac03?token=b08ca99fe0e3c3be791618206701e729
+    - https://kejalrn7ffb572qu0jeb.fznfzn.cn/signal/channel/receiver?token=354efa8fd93902f004c4c7b4cd4a2621
+    icon: https://github.com/Repcz/Repcz.github.io/raw/main/docs/egern/Photo/Egern.png
+    hidden: false
+- select:
+    name: 国外网站
+    policies:
+    - 香港节点
+    - 美国节点
+    - 狮城节点
+    - 日本节点
+    - 台湾节点
+    - 手动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
+- select:
+    name: 国际媒体
+    policies:
+    - 香港节点
+    - 美国节点
+    - 狮城节点
+    - 日本节点
+    - 台湾节点
+    - 手动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+- select:
+    name: 微软服务
+    policies:
+    - 香港节点
+    - 美国节点
+    - 狮城节点
+    - 日本节点
+    - 台湾节点
+    - 手动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
+- select:
+    name: 谷歌服务
+    policies:
+    - 香港节点
+    - 美国节点
+    - 狮城节点
+    - 日本节点
+    - 台湾节点
+    - 手动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
+- select:
+    name: 电报消息
+    policies:
+    - 香港节点
+    - 美国节点
+    - 狮城节点
+    - 日本节点
+    - 台湾节点
+    - 手动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
+- select:
+    name: 推特消息
+    policies:
+    - 香港节点
+    - 美国节点
+    - 狮城节点
+    - 日本节点
+    - 台湾节点
+    - 手动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
+- select:
+    name: AI
+    policies:
+    - 香港节点
+    - 美国节点
+    - 狮城节点
+    - 日本节点
+    - 台湾节点
+    - 手动选择
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/OpenAI.png
+- select:
+    name: 游戏平台
+    policies:
+    - 香港节点
+    - 美国节点
+    - 狮城节点
+    - 日本节点
+    - 台湾节点
+    - 手动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Game.png
+- select:
+    name: Emby
+    policies:
+    - 手动选择
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Emby.png
+- select:
+    name: 兜底分流
+    policies:
+    - 香港节点
+    - 美国节点
+    - 狮城节点
+    - 日本节点
+    - 台湾节点
+    - 手动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
+- auto_test:
+    name: 香港节点
+    policies:
+    - 手动选择
+    flatten: true
+    filter: (?i)🇭🇰|香港|(\b(HK|Hong)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+- auto_test:
+    name: 美国节点
+    policies:
+    - 手动选择
+    flatten: true
+    filter: (?i)🇺🇸|美国|洛杉矶|圣何塞|(\b(US|United States)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+- auto_test:
+    name: 狮城节点
+    policies:
+    - 手动选择
+    flatten: true
+    filter: (?i)🇸🇬|新加坡|狮|(\b(SG|Singapore)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+- auto_test:
+    name: 日本节点
+    policies:
+    - 手动选择
+    flatten: true
+    filter: (?i)🇯🇵|日本|东京|(\b(JP|Japan)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+- auto_test:
+    name: 台湾节点
+    policies:
+    - 手动选择
+    flatten: true
+    filter: (?i)🇨🇳|🇹🇼|台湾|(\b(TW|Tai|Taiwan)\b)
+    tolerance: 0
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China.png
+rules:
+- domain_suffix:
+    match: ingest.sentry.io
+    policy: 国外网站
+    disabled: false
+- domain_suffix:
+    match: mgs-t.playstove.com
+    policy: 国外网站
+    disabled: false
+- domain_suffix:
+    match: playstove.com
+    policy: 国外网站
+    disabled: false
+- domain:
+    match: latency-map-honkong.sginfra.net
+    policy: 国外网站
+    disabled: false
+- domain:
+    match: mgs-t.playstove.com
+    policy: 国外网站
+    disabled: false
+- domain:
+    match: kejalrn7ffb572qu0jeb.fznfzn.cn
+    policy: 国外网站
+    disabled: false
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Direct.yaml
+    policy: DIRECT
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Reject.yaml
+    policy: REJECT
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/AI.yaml
+    policy: AI
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Github.yaml
+    policy: 微软服务
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/OneDrive.yaml
+    policy: 微软服务
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Microsoft.yaml
+    policy: 微软服务
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/YouTube.yaml
+    policy: 谷歌服务
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Google.yaml
+    policy: 谷歌服务
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Telegram.yaml
+    policy: 电报消息
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Twitter.yaml
+    policy: 推特消息
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Game.yaml
+    policy: 游戏平台
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Emby.yaml
+    policy: Emby
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Bahamut.yaml
+    policy: 国际媒体
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Disney.yaml
+    policy: 国际媒体
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/HBO.yaml
+    policy: 国际媒体
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Netflix.yaml
+    policy: 国际媒体
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Spotify.yaml
+    policy: 国际媒体
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/PrimeVideo.yaml
+    policy: 国际媒体
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/TikTok.yaml
+    policy: 国际媒体
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Proxy.yaml
+    policy: 国外网站
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/AppleCN.yaml
+    policy: DIRECT
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/AppleServers.yaml
+    policy: 香港节点
+- rule_set:
+    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Lan.yaml
+    policy: DIRECT
+- geoip:
+    match: CN
+    policy: DIRECT
+- default:
+    policy: 兜底分流
+scriptings:
+- http_request:
+    name: 晓晓优选-初始化
+    match: ^https://xxyx-client-api\.xiaoxiaoyouxuan\.com/my
+    script_url: https://raw.githubusercontent.com/kiarimovv/script/main/xxyx.js
+    update_interval: 86400
+    timeout: 60
+    body_required: false
+- schedule:
+    name: 晓晓优选-定时签到
+    cron: 0 8 * * *
+    script_url: https://raw.githubusercontent.com/kiarimovv/script/main/xxyx.js
+    update_interval: 86400
+    timeout: 60
+- http_request:
+    name: 歪麦霸王餐-初始化
+    match: ^https://wmapp-api\.waimaimingtang\.com/api/api/v2/user/api_user_info_one
+    script_url: https://raw.githubusercontent.com/kiarimovv/script/main/wmbwc.js
+    update_interval: 86400
+    timeout: 60
+    body_required: true
+- schedule:
+    name: 歪麦霸王餐-定时签到
+    cron: 30 8 * * *
+    script_url: https://raw.githubusercontent.com/kiarimovv/script/main/wmbwc.js
+    update_interval: 86400
+    timeout: 60
+- http_response:
+    name: 小蚕霸王餐-初始化
+    match: ^https://gw\.xiaocantech\.com/rpc
+    script_url: https://raw.githubusercontent.com/kiarimovv/script/main/xcbwc.js
+    update_interval: 86400
+    timeout: 60
+    body_required: true
+- schedule:
+    name: 小蚕霸王餐-定时签到
+    cron: 0 9 * * *
+    script_url: https://raw.githubusercontent.com/kiarimovv/script/main/xcbwc.js
+    update_interval: 86400
+    timeout: 60
+- generic:
+    name: 机场订阅小组件
+    script_url: https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/Sub_Widget.JS
+- generic:
+    name: 虚拟货币小组件
+    script_url: https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/Crypto_Widget.JS
+http_captures:
+- xxyx-client-api.xiaoxiaoyouxuan.com
+- wmapp-api.waimaimingtang.com
+- gw.xiaocantech.com
+mitm:
+  ca_p12: egern.p12
+  ca_passphrase: egern
+  hostnames:
+    includes:
+    - o4505782787964928.ingest.sentry.io
+    - xxyx-client-api.xiaoxiaoyouxuan.com
+    - wmapp-api.waimaimingtang.com
+    - gw.xiaocantech.com
+widgets:
+- name: 机场订阅
+  script_name: 机场订阅小组件
+  env:
+    URL2: https://zhs.futbol/link/O5N5rSbEr3d86s42?mu=2&tj=1
+    NAME2: ZHS
+    URL1: https://kejalrn7ffb572qu0jeb.fznfzn.cn/signal/channel/receiver?token=354efa8fd93902f004c4c7b4cd4a2621
+    NAME1: ASH
+- name: 虚拟货币
+  script_name: 虚拟货币小组件
+modules:
+- url: https://kelee.one/Tool/Loon/Lpx/BlockAdvertisers.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Block_HTTPDNS.lpx
+  enabled: true
+- url: https://raw.githubusercontent.com/egerndaddy/quick-start/main/modules/server-monitor.yaml
+  env:
+    host: 23.91.97.205
+    username: ubuntu
+    password: 29003749Cy
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/YouKu_Video_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/RedPaper_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/XiaoHeiHe_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/FleaMarket_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/WexinMiniPrograms_Remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Weixin_external_links_unlock.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Weixin_Official_Accounts_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/NeteaseCloudMusic_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Tencent_Video_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Taobao_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/LuckinCoffee_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/51Job_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/PinDuoDuo_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/miHoYoBBS_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/MangoTV_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/CoolApk_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Remove_ads_by_keli.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/JD_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Node_detection_tool.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/91160_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/MrHema_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Umetrip_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Amap_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/DouBan_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Damai_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/NodeLinkCheck.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/ColorfulClouds_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/AliYunDrive_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/iQiYi_Video_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/YouTube_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/WARP_Node_Query.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/TubeMax_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/TestFlightRegionUnlock.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Reddit_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/QQMusic_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/QQ_Redirect.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/EcovacsHome_remove_ads.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/Prevent_DNS_Leaks.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/AppleWeatherEnhancer.lpx
+  enabled: true
+- url: https://kelee.one/Tool/Loon/Lpx/12306_remove_ads.lpx
+  enabled: true
+- url: https://raw.githubusercontent.com/IBL3ND/module/refs/heads/main/surge-loon-to-egern.yaml
+  enabled: true
+- url: https://raw.githubusercontent.com/ClydeTime/BiliBili/main/modules/BiliBili.Modified.sgmodule
+  enabled: true
+- url: https://github.com/Maasea/sgmodule/raw/refs/heads/master/KeepAds.sgmodule
+  enabled: true
+- url: https://github.com/Maasea/sgmodule/raw/refs/heads/master/Bilibili.Helper.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
+  enabled: true
+- url: https://github.com/BiliUniverse/ADBlock/releases/latest/download/BiliBili.ADBlock.sgmodule
+  enabled: true
+- url: https://github.com/BiliUniverse/Global/releases/latest/download/BiliBili.Global.sgmodule
+  enabled: true
+- url: https://github.com/BiliUniverse/Enhanced/releases/latest/download/BiliBili.Enhanced.sgmodule
+  enabled: true
+- url: https://github.com/kokoryh/Sparkle/raw/refs/heads/master/release/surge/module/bilibili.sgmodule
+  enabled: true
+- url: https://github.com/Maasea/sgmodule/raw/master/YouTube.Enhance.sgmodule
+  enabled: true
+- url: https://github.com/DualSubs/YouTube/releases/latest/download/DualSubs.YouTube.sgmodule
+  enabled: true

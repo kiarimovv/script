@@ -23,6 +23,44 @@ const SCRIPT_NAME       = '歪麦霸王餐';
 const ENV_VAR_NAME      = 'wmbwc_data';
 const ORIGINAL_SCRIPT   = 'https://gist.githubusercontent.com/Sliverkiss/49a9ffb2169a2becc33bf4fdbf6eb99a/raw/wmbwc.js';
 
+function isPlaceholderValue(value) {
+    if (typeof value !== 'string') {
+        return false;
+    }
+    return value.includes('填入') || value === '备注';
+}
+
+function sanitizeStoredAccounts(ctx) {
+    const raw = ctx.storage.get(ENV_VAR_NAME);
+    if (!raw) {
+        return;
+    }
+
+    try {
+        const accounts = JSON.parse(raw);
+        if (!Array.isArray(accounts)) {
+            return;
+        }
+
+        const validAccounts = accounts.filter((account) => {
+            if (!account || typeof account !== 'object') {
+                return false;
+            }
+            const { userId, token, userName } = account;
+            if (!userId || !token) {
+                return false;
+            }
+            return ![userId, token, userName].some(isPlaceholderValue);
+        });
+
+        if (validAccounts.length !== accounts.length) {
+            ctx.storage.set(ENV_VAR_NAME, JSON.stringify(validAccounts));
+        }
+    } catch {
+        // 保持原始数据，交由原脚本继续处理
+    }
+}
+
 /**
  * Egern Headers 只支持 get()/has() 等方法，不支持 forEach/entries()
  * 但支持 bracket 访问（headers['key']），因此 Object.entries() 可以枚举所有 header
@@ -32,6 +70,8 @@ function hdrsToObj(h) {
 }
 
 export default async function (ctx) {
+    sanitizeStoredAccounts(ctx);
+
     // ── 1. 将 Egern 环境变量预写入持久化存储（供原脚本读取）──
     const envVal = ctx.env?.[ENV_VAR_NAME];
     if (envVal) {
