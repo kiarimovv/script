@@ -28,6 +28,17 @@ const SCRIPT_NAME       = '小蚕霸王餐';
 const ENV_VAR_NAME      = 'xcbwc_data';
 const ORIGINAL_SCRIPT   = 'https://gist.githubusercontent.com/Sliverkiss/250a02315f0a2c99f42da3b3573375c8/raw/xcbwc.js';
 
+/** Egern Headers 对象不支持 forEach，统一用 entries() 转为普通对象 */
+function hdrsToObj(h) {
+    const obj = {};
+    if (typeof h.entries === 'function') {
+        for (const [k, v] of h.entries()) obj[k] = v;
+    } else {
+        Object.assign(obj, h);
+    }
+    return obj;
+}
+
 export default async function (ctx) {
     // ── 1. 将 Egern 环境变量预写入持久化存储（供原脚本读取）──
     const envVal = ctx.env?.[ENV_VAR_NAME];
@@ -69,7 +80,7 @@ export default async function (ctx) {
             .then(async (resp) => {
                 const text = await resp.text();
                 const hdrs = {};
-                resp.headers.forEach((v, k) => { hdrs[k] = v; });
+                Object.assign(hdrs, hdrsToObj(resp.headers));
                 callback(null,
                     { status: resp.status, statusCode: resp.status, headers: hdrs, body: text },
                     text);
@@ -88,23 +99,19 @@ export default async function (ctx) {
     // ── 3. 注入响应上下文（http_response 触发时）────────────
     let originalResponseBody = '';
     if (ctx.request) {
-        const hdrs = {};
-        ctx.request.headers.forEach((v, k) => { hdrs[k] = v; });
         const body = await ctx.request.text().catch(() => '');
         globalThis.$request = {
             url:     ctx.request.url,
             method:  ctx.request.method,
-            headers: hdrs,
+            headers: hdrsToObj(ctx.request.headers),
             body,
         };
     }
     if (ctx.response) {
         originalResponseBody = await ctx.response.text().catch(() => '');
-        const hdrs = {};
-        ctx.response.headers.forEach((v, k) => { hdrs[k] = v; });
         globalThis.$response = {
             status:  ctx.response.status,
-            headers: hdrs,
+            headers: hdrsToObj(ctx.response.headers),
             body:    originalResponseBody,
         };
     }
@@ -138,11 +145,9 @@ export default async function (ctx) {
 
     // http_response 模式：透传原始响应体（不修改 App 的响应）
     if (ctx.response) {
-        const hdrs = {};
-        ctx.response.headers.forEach((v, k) => { hdrs[k] = v; });
         return {
             status:  ctx.response.status,
-            headers: hdrs,
+            headers: hdrsToObj(ctx.response.headers),
             body:    originalResponseBody,
         };
     }

@@ -23,6 +23,17 @@ const SCRIPT_NAME       = '歪麦霸王餐';
 const ENV_VAR_NAME      = 'wmbwc_data';
 const ORIGINAL_SCRIPT   = 'https://gist.githubusercontent.com/Sliverkiss/49a9ffb2169a2becc33bf4fdbf6eb99a/raw/wmbwc.js';
 
+/** Egern Headers 对象不支持 forEach，统一用 entries() 转为普通对象 */
+function hdrsToObj(h) {
+    const obj = {};
+    if (typeof h.entries === 'function') {
+        for (const [k, v] of h.entries()) obj[k] = v;
+    } else {
+        Object.assign(obj, h);
+    }
+    return obj;
+}
+
 export default async function (ctx) {
     // ── 1. 将 Egern 环境变量预写入持久化存储（供原脚本读取）──
     const envVal = ctx.env?.[ENV_VAR_NAME];
@@ -64,7 +75,7 @@ export default async function (ctx) {
             .then(async (resp) => {
                 const text = await resp.text();
                 const hdrs = {};
-                resp.headers.forEach((v, k) => { hdrs[k] = v; });
+                Object.assign(hdrs, hdrsToObj(resp.headers));
                 callback(null,
                     { status: resp.status, statusCode: resp.status, headers: hdrs, body: text },
                     text);
@@ -82,13 +93,11 @@ export default async function (ctx) {
 
     // ── 3. 注入请求上下文（http_request 触发时） ────────────
     if (ctx.request) {
-        const hdrs = {};
-        ctx.request.headers.forEach((v, k) => { hdrs[k] = v; });
         const body = await ctx.request.text().catch(() => '');
         globalThis.$request = {
             url:     ctx.request.url,
             method:  ctx.request.method,
-            headers: hdrs,
+            headers: hdrsToObj(ctx.request.headers),
             body,
         };
     }

@@ -61,9 +61,8 @@ export default async function (ctx) {
     // ── 模式一：http_response 触发（抓取 Token 并保存）──────
     if (ctx.request && ctx.response) {
         try {
-            const hdrs = {};
-            ctx.request.headers.forEach((v, k) => { hdrs[k.toLowerCase()] = v; });
-            const token = hdrs['xx-token'];
+            // Egern Headers 对象使用 get() 而非 forEach
+            const token = ctx.request.headers.get('xx-token');
 
             const data = await ctx.response.json().catch(() => null);
             const info = data?.data;
