@@ -185,6 +185,7 @@ function hdrsToObj(h) {
 
 export default async function (ctx) {
     sanitizeStoredAccounts(ctx);
+    const logger = createLoggerBridge(SCRIPT_NAME);
 
     // ── 1. 将 Egern 环境变量预写入持久化存储（供原脚本读取）──
     const envVal = ctx.env?.[ENV_VAR_NAME];
@@ -194,6 +195,7 @@ export default async function (ctx) {
 
     // ── 2. http_request 初始化阶段直接抓取账号，避免原始脚本拦截时报错 ──
     if (ctx.request && !ctx.response) {
+        logger.log('初始化触发，开始从请求中提取账号凭证');
         const body = typeof ctx.request.text === 'function'
             ? await ctx.request.text().catch(() => '')
             : '';
@@ -204,11 +206,13 @@ export default async function (ctx) {
 
         if (account) {
             upsertAccount(ctx, account);
+            logger.log(`账号更新成功 userId=${account.userId} userName=${account.userName}`);
             ctx.notify({
                 title: SCRIPT_NAME,
                 body: `已更新账号：${account.userName || account.userId}`,
             });
         } else {
+            logger.log('未提取到完整凭证，请检查请求头和请求体中的 userId/token');
             ctx.notify({
                 title: SCRIPT_NAME,
                 body: '未能从本次请求中提取 userId/token，请反馈抓包请求头与请求体。',
@@ -236,13 +240,13 @@ export default async function (ctx) {
             body:     String(body     ?? ''),
         }),
     };
-    const logger = createLoggerBridge(SCRIPT_NAME);
+    const upstreamLogger = createLoggerBridge(SCRIPT_NAME);
     globalThis.console = {
         ...console,
-        log: (...args) => logger.log(...args),
-        error: (...args) => logger.error(...args),
-        warn: (...args) => logger.log(...args),
-        info: (...args) => logger.log(...args),
+        log: (...args) => upstreamLogger.log(...args),
+        error: (...args) => upstreamLogger.error(...args),
+        warn: (...args) => upstreamLogger.log(...args),
+        info: (...args) => upstreamLogger.log(...args),
     };
 
     // HTTP 客户端（$httpClient）— callback 风格，内部用 ctx.http Promise 适配
