@@ -23,6 +23,41 @@ const SCRIPT_NAME       = '歪麦霸王餐';
 const ENV_VAR_NAME      = 'wmbwc_data';
 const ORIGINAL_SCRIPT   = 'https://gist.githubusercontent.com/Sliverkiss/49a9ffb2169a2becc33bf4fdbf6eb99a/raw/wmbwc.js';
 
+function normalizeHeaders(headers) {
+    return Object.fromEntries(Object.entries(headers || {}).map(([key, value]) => [String(key).toLowerCase(), value]));
+}
+
+function parseBodyObject(body) {
+    if (!body || typeof body !== 'string') {
+        return {};
+    }
+
+    try {
+        const parsed = JSON.parse(body);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+        const params = new URLSearchParams(body);
+        const entries = Object.fromEntries(params.entries());
+        return entries && typeof entries === 'object' ? entries : {};
+    }
+}
+
+function pickFirstString(...values) {
+    for (const value of values) {
+        if (typeof value === 'string' && value.trim()) {
+            return value.trim();
+        }
+    }
+    return '';
+}
+
+function parseBearerToken(value) {
+    if (typeof value !== 'string') {
+        return '';
+    }
+    return value.replace(/^Bearer\s+/i, '').trim();
+}
+
 function isPlaceholderValue(value) {
     if (typeof value !== 'string') {
         return false;
@@ -61,6 +96,74 @@ function sanitizeStoredAccounts(ctx) {
     }
 }
 
+function loadStoredAccounts(ctx) {
+    const raw = ctx.storage.get(ENV_VAR_NAME);
+    if (!raw) {
+        return [];
+    }
+
+    try {
+        const accounts = JSON.parse(raw);
+        return Array.isArray(accounts) ? accounts : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveStoredAccounts(ctx, accounts) {
+    ctx.storage.set(ENV_VAR_NAME, JSON.stringify(accounts));
+}
+
+function extractAccountFromRequest({ headers = {}, body = '' }) {
+    const normalizedHeaders = normalizeHeaders(headers);
+    const parsedBody = parseBodyObject(body);
+
+    const token = pickFirstString(
+        parseBearerToken(normalizedHeaders.authorization),
+        normalizedHeaders.token,
+        normalizedHeaders['x-token'],
+        normalizedHeaders['access-token'],
+        parsedBody.token,
+        parsedBody.accessToken,
+    );
+
+    const userId = pickFirstString(
+        normalizedHeaders['x-user-id'],
+        normalizedHeaders.userid,
+        normalizedHeaders['user-id'],
+        parsedBody.userId,
+        parsedBody.user_id,
+        parsedBody.uid,
+        parsedBody.id,
+    );
+
+    const userName = pickFirstString(
+        parsedBody.userName,
+        parsedBody.username,
+        parsedBody.nickName,
+        parsedBody.nickname,
+        normalizedHeaders['x-user-name'],
+        userId,
+    );
+
+    if (!userId || !token) {
+        return null;
+    }
+
+    return { userId, token, userName };
+}
+
+function upsertAccount(ctx, account) {
+    const accounts = loadStoredAccounts(ctx);
+    const index = accounts.findIndex((item) => item?.userId === account.userId);
+    if (index >= 0) {
+        accounts[index] = { ...accounts[index], ...account };
+    } else {
+        accounts.push(account);
+    }
+    saveStoredAccounts(ctx, accounts);
+}
+
 /**
  * Egern Headers 只支持 get()/has() 等方法，不支持 forEach/entries()
  * 但支持 bracket 访问（headers['key']），因此 Object.entries() 可以枚举所有 header
@@ -78,7 +181,32 @@ export default async function (ctx) {
         ctx.storage.set(ENV_VAR_NAME, envVal);
     }
 
-    // ── 2. 注入 Surge 全局对象 ───────────────────────────────
+    // ── 2. http_request 初始化阶段直接抓取账号，避免原始脚本拦截时报错 ──
+    if (ctx.request && !ctx.response) {
+        const body = typeof ctx.request.text === 'function'
+            ? await ctx.request.text().catch(() => '')
+            : '';
+        const account = extractAccountFromRequest({
+            headers: hdrsToObj(ctx.request.headers),
+            body,
+        });
+
+        if (account) {
+            upsertAccount(ctx, account);
+            ctx.notify({
+                title: SCRIPT_NAME,
+                body: `已更新账号：${account.userName || account.userId}`,
+            });
+        } else {
+            ctx.notify({
+                title: SCRIPT_NAME,
+                body: '未能从本次请求中提取 userId/token，请反馈抓包请求头与请求体。',
+            });
+        }
+        return;
+    }
+
+    // ── 3. 注入 Surge 全局对象 ───────────────────────────────
 
     // 让 Env.getEnv() 识别为 Surge，走 Surge 的 API 分支
     globalThis.$environment = { 'surge-version': '1000' };
@@ -128,7 +256,7 @@ export default async function (ctx) {
         patch:  makeMethod('patch'),
     };
 
-    // ── 3. 注入请求上下文（http_request 触发时） ────────────
+    // ── 4. 注入请求上下文（schedule 内部请求时也可能使用） ────
     if (ctx.request) {
         // body_required: false 时 ctx.request.text 可能不存在
         const body = typeof ctx.request.text === 'function'
@@ -143,7 +271,7 @@ export default async function (ctx) {
     }
     // 注意：http_request 模式下不存在 $response
 
-    // ── 4. 动态加载原始脚本并在 Surge 兼容环境中执行 ────────
+    // ── 5. 动态加载原始脚本并在 Surge 兼容环境中执行 ────────
     await new Promise((resolve) => {
         let isFinished = false;
         const finish = () => {
@@ -180,3 +308,7 @@ export default async function (ctx) {
 
     // http_request 模式：返回 undefined = 放行原始请求（不修改）
 }
+
+export const __test__ = {
+    extractAccountFromRequest,
+};
