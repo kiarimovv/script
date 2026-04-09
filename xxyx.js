@@ -14,6 +14,16 @@ const BASE_URL = 'https://xxyx-client-api.xiaoxiaoyouxuan.com';
 const ORIGINAL_SCRIPT = 'https://gist.githubusercontent.com/Sliverkiss/991a81be1fc8cf2a1937432be68f5521/raw/xxyx.js';
 const UPSTREAM_TIMEOUT_MS = 175000;
 
+function createLoggerBridge(name, sink = console.log) {
+    const write = (...args) => {
+        sink(`[${name}]`, ...args.map((item) => String(item)));
+    };
+    return {
+        log: (...args) => write(...args),
+        error: (...args) => write(...args),
+    };
+}
+
 function normalizeHeaders(headers) {
     return Object.fromEntries(Object.entries(headers || {}).map(([key, value]) => [String(key).toLowerCase(), value]));
 }
@@ -83,6 +93,7 @@ async function api(ctx, token, path, method = 'GET', body = null) {
 }
 
 function installBridge(ctx) {
+    const logger = createLoggerBridge(SCRIPT_NAME);
     globalThis.$environment = { 'surge-version': '1000' };
     globalThis.$persistentStore = {
         read: (key) => ctx.storage.get(key),
@@ -97,6 +108,13 @@ function installBridge(ctx) {
             subtitle: String(subtitle ?? ''),
             body: String(body ?? ''),
         }),
+    };
+    globalThis.console = {
+        ...console,
+        log: (...args) => logger.log(...args),
+        error: (...args) => logger.error(...args),
+        warn: (...args) => logger.log(...args),
+        info: (...args) => logger.log(...args),
     };
 
     const makeMethod = (method) => (options, callback) => {
@@ -212,4 +230,5 @@ export default async function (ctx) {
 
 export const __test__ = {
     extractTokenFromHeaders,
+    createLoggerBridge,
 };
