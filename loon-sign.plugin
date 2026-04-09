@@ -1,0 +1,20 @@
+#!name=餐饮签到合集
+#!desc=小蚕霸王餐、晓晓优选、歪麦霸王餐
+#!author=kiarimo
+#!homepage=https://github.com/kiarimovv/script
+
+[Script]
+# 小蚕霸王餐
+http-response ^https:\/\/gw\.xiaocantech\.com\/rpc script-path=https://gist.githubusercontent.com/Sliverkiss/250a02315f0a2c99f42da3b3573375c8/raw/xcbwc.js, requires-body=true, timeout=60, tag=小蚕霸王餐
+cron "0 9 * * *" script-path=https://gist.githubusercontent.com/Sliverkiss/250a02315f0a2c99f42da3b3573375c8/raw/xcbwc.js, timeout=60, tag=小蚕霸王餐-定时签到
+
+# 晓晓优选
+http-request ^https:\/\/xxyx-client-api\.xiaoxiaoyouxuan\.com\/my script-path=https://gist.githubusercontent.com/Sliverkiss/991a81be1fc8cf2a1937432be68f5521/raw/xxyx.js, timeout=60, tag=晓晓优选
+cron "0 8 * * *" script-path=https://gist.githubusercontent.com/Sliverkiss/991a81be1fc8cf2a1937432be68f5521/raw/xxyx.js, timeout=60, tag=晓晓优选-定时签到
+
+# 歪麦霸王餐
+http-request ^https:\/\/wmapp-api\.waimaimingtang\.com\/api\/api\/v2\/user\/api_user_info_one script-path=https://gist.githubusercontent.com/Sliverkiss/49a9ffb2169a2becc33bf4fdbf6eb99a/raw/wmbwc.js, requires-body=true, timeout=60, tag=歪麦霸王餐
+cron "30 8 * * *" script-path=https://gist.githubusercontent.com/Sliverkiss/49a9ffb2169a2becc33bf4fdbf6eb99a/raw/wmbwc.js, timeout=60, tag=歪麦霸王餐-定时签到
+
+[MITM]
+hostname = gw.xiaocantech.com, xxyx-client-api.xiaoxiaoyouxuan.com, wmapp-api.waimaimingtang.com
