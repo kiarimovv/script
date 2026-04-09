@@ -9,7 +9,7 @@ http-response ^https:\/\/gw\.xiaocantech\.com\/rpc script-path=https://gist.gith
 cron "0 9 * * *" script-path=https://gist.githubusercontent.com/Sliverkiss/250a02315f0a2c99f42da3b3573375c8/raw/xcbwc.js, timeout=60, tag=小蚕霸王餐-定时签到
 
 # 晓晓优选
-http-request ^https:\/\/xxyx-client-api\.xiaoxiaoyouxuan\.com\/my script-path=https://gist.githubusercontent.com/Sliverkiss/991a81be1fc8cf2a1937432be68f5521/raw/xxyx.js, timeout=60, tag=晓晓优选
+http-response ^https:\/\/xxyx-client-api\.xiaoxiaoyouxuan\.com\/my script-path=https://gist.githubusercontent.com/Sliverkiss/991a81be1fc8cf2a1937432be68f5521/raw/xxyx.js, requires-body=true, timeout=60, tag=晓晓优选
 cron "0 8 * * *" script-path=https://gist.githubusercontent.com/Sliverkiss/991a81be1fc8cf2a1937432be68f5521/raw/xxyx.js, timeout=60, tag=晓晓优选-定时签到
 
 # 歪麦霸王餐
