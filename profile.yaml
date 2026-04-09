@@ -31,13 +31,13 @@ scriptings:
   # 晓晓优选（原生 Egern 脚本，无需兼容层）
   # ------------------------------------------------------------
   # 步骤一：打开 App → 进入「我的」页面 → 自动抓取 Token
-  - http_response:
+  - http_request:
       name: 晓晓优选-抓取Token
       match: "^https://xxyx-client-api\\.xiaoxiaoyouxuan\\.com/my"
       script_url: "https://raw.githubusercontent.com/kiarimovv/script/main/xxyx.js"
       update_interval: 86400
       timeout: 60
-      body_required: true
+      body_required: false
 
   # 步骤二：每天 08:00 定时签到（Token 抓取后自动生效，无需设置 env）
   - schedule:
@@ -50,28 +50,22 @@ scriptings:
   # ------------------------------------------------------------
   # 歪麦霸王餐（Surge 兼容层包装，动态加载原始脚本）
   # ------------------------------------------------------------
-  # 步骤一：打开 App → 进入「我的」页面 → 自动抓取凭证并执行任务
+  # 步骤一：打开 App → 进入「我的」页面 → 自动抓取凭证
   - http_request:
       name: 歪麦霸王餐-拦截
       match: "^https://wmapp-api\\.waimaimingtang\\.com/api/api/v2/user/api_user_info_one"
       script_url: "https://raw.githubusercontent.com/kiarimovv/script/main/wmbwc.js"
       update_interval: 86400
       timeout: 60
-      body_required: false
+      body_required: true
 
-  # 步骤二（可选）：每天 08:30 定时执行
-  # 需要先填入 wmbwc_data 环境变量（格式见下方）
+  # 步骤二：每天 08:30 定时执行（抓包成功后自动生效）
   - schedule:
       name: 歪麦霸王餐-定时签到
       cron: "30 8 * * *"
       script_url: "https://raw.githubusercontent.com/kiarimovv/script/main/wmbwc.js"
       update_interval: 86400
       timeout: 60
-      env:
-        # 填入你的账号信息（可多账号，以数组形式）
-        # userId 和 token 通过上面的「拦截」脚本自动抓取后会存储在本地
-        # 也可手动填入直接使用定时任务模式
-        wmbwc_data: '[{"userId":"填入userId","token":"填入token","userName":"账号备注"}]'
 
   # ------------------------------------------------------------
   # 小蚕霸王餐（Surge 兼容层包装，动态加载原始脚本）
@@ -85,16 +79,18 @@ scriptings:
       timeout: 60
       body_required: true
 
-  # 步骤二（可选）：每天 09:00 定时执行
-  # xcbwc_data 字段对应 App 请求头：userId=x-vayne, teemo=x-teemo, token=x-sivir
+  # 步骤二：每天 09:00 定时执行（抓包成功后自动生效）
   - schedule:
       name: 小蚕霸王餐-定时签到
       cron: "0 9 * * *"
       script_url: "https://raw.githubusercontent.com/kiarimovv/script/main/xcbwc.js"
       update_interval: 86400
       timeout: 60
-      env:
-        xcbwc_data: '[{"userId":"x-vayne值","teemo":"x-teemo值","token":"x-sivir值","userName":"账号备注"}]'
+
+http_captures:
+  - "xxyx-client-api.xiaoxiaoyouxuan.com"
+  - "wmapp-api.waimaimingtang.com"
+  - "gw.xiaocantech.com"
 
 # ============================================================
 # DNS 配置

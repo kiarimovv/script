@@ -118,28 +118,36 @@ export default async function (ctx) {
 
     // ── 4. 动态加载原始脚本并在 Surge 兼容环境中执行 ────────
     await new Promise((resolve) => {
+        let isFinished = false;
+        const finish = () => {
+            if (isFinished) {
+                return;
+            }
+            isFinished = true;
+            clearTimeout(timer);
+            resolve();
+        };
+
         // $done() 拦截：脚本完成时放行
-        globalThis.$done = () => resolve();
+        globalThis.$done = () => finish();
         // 安全超时（55 秒），防止脚本卡住
-        const timer = setTimeout(() => resolve(), 55000);
+        const timer = setTimeout(() => finish(), 55000);
 
         ctx.http.get(ORIGINAL_SCRIPT)
             .then(r => r.text())
             .then(code => {
-                clearTimeout(timer);
                 try {
                     // eval 在 globalThis 所在作用域执行，$persistentStore 等全局可见
                     // eslint-disable-next-line no-eval
                     eval(code);
                 } catch (e) {
                     ctx.notify({ title: SCRIPT_NAME, body: `脚本执行错误: ${e.message}` });
-                    resolve();
+                    finish();
                 }
             })
             .catch(e => {
-                clearTimeout(timer);
                 ctx.notify({ title: SCRIPT_NAME, body: `脚本加载失败: ${e.message}` });
-                resolve();
+                finish();
             });
     });
 
