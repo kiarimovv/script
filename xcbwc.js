@@ -28,15 +28,12 @@ const SCRIPT_NAME       = '小蚕霸王餐';
 const ENV_VAR_NAME      = 'xcbwc_data';
 const ORIGINAL_SCRIPT   = 'https://gist.githubusercontent.com/Sliverkiss/250a02315f0a2c99f42da3b3573375c8/raw/xcbwc.js';
 
-/** Egern Headers 对象不支持 forEach，统一用 entries() 转为普通对象 */
+/**
+ * Egern Headers 只支持 get()/has() 等方法，不支持 forEach/entries()
+ * 但支持 bracket 访问（headers['key']），因此 Object.entries() 可以枚举所有 header
+ */
 function hdrsToObj(h) {
-    const obj = {};
-    if (typeof h.entries === 'function') {
-        for (const [k, v] of h.entries()) obj[k] = v;
-    } else {
-        Object.assign(obj, h);
-    }
-    return obj;
+    try { return Object.fromEntries(Object.entries(h)); } catch { return {}; }
 }
 
 export default async function (ctx) {
@@ -99,7 +96,10 @@ export default async function (ctx) {
     // ── 3. 注入响应上下文（http_response 触发时）────────────
     let originalResponseBody = '';
     if (ctx.request) {
-        const body = await ctx.request.text().catch(() => '');
+        // 请求 body 只在 body_required: true 时可用，否则跳过
+        const body = typeof ctx.request.text === 'function'
+            ? await ctx.request.text().catch(() => '')
+            : '';
         globalThis.$request = {
             url:     ctx.request.url,
             method:  ctx.request.method,
